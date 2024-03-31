@@ -27,7 +27,7 @@ f = files[0]
 
 participant = f.split("-")[0].replace(data_path, "")
 label = f.split("-")[1]
-category = f.split("_")[2].rstrip("123")
+category = f.split("-")[2].rstrip("123")
 
 df = pd.read_csv(f)
 
@@ -47,8 +47,8 @@ gyr_set = 1
 
 for f in files:
     participant = f.split("-")[0].replace(data_path, "")
-    label = f.split("_")[1]
-    category = f.split("_")[2].rstrip("123").rstrip("_MetaWear_2019")
+    label = f.split("-")[1]
+    category = f.split("-")[2].rstrip("123").rstrip("_MetaWear_2019")
     
     df = pd.read_csv(f)
     
@@ -101,8 +101,8 @@ def read_data_from_files(files):
     for f in files:
         
         participant = f.split("-")[0].replace(data_path, "")
-        label = f.split("_")[1]
-        category = f.split("_")[2].rstrip("123").rstrip("_MetaWear_2019")
+        label = f.split("-")[1]
+        category = f.split("-")[2].rstrip("123").rstrip("_MetaWear_2019")
         
         df = pd.read_csv(f)  # Leggi il file CSV
     
@@ -111,7 +111,8 @@ def read_data_from_files(files):
         df["label"] = label  
         df["category"] = category  
     
-        # Smista i dati dell'accelerometro e del giroscopio aggiungendoli al DataFrame appropriato
+        # Smista i dati dell'accelerometro e del giroscopio aggiungendoli
+        # al DataFrame appropriato
         if "Accelerometer" in f:
             df["set"] = acc_set
             acc_set += 1
@@ -147,7 +148,6 @@ acc_df, gyr_df = read_data_from_files(files)
 data_merged = pd.concat([acc_df.iloc[:,:3], gyr_df], axis=1)
 
 # Rename columns
-
 data_merged.columns = [
     "acc_x",
     "acc_y",
@@ -161,9 +161,12 @@ data_merged.columns = [
     "set",
 ]
 
-
 # --------------------------------------------------------------
 # Resample data (frequency conversion)
+# I dati provenienti dai sensori di accelerometro e giroscopio vengono 
+# resampled per convertire la frequenza di campionamento dei dati. 
+# L'accelerometro è campionato a 12.500Hz mentre il giroscopio a 25.000Hz. 
+# Si desidera convertire entrambi i dataset in una frequenza comune di 200ms.
 # --------------------------------------------------------------
 
 # Accelerometer:    12.500HZ
@@ -182,13 +185,27 @@ sampling = {
     "set" : "last",
 }
 
+# --------------------------------------------------------------
+# Quando si applica la funzione `apply(sampling)` a un DataFrame 
+# resampled, si esegue un'operazione di aggregazione su ogni 
+# finestra temporale definita dalla regola di resampling. 
+# La funzione di aggregazione viene applicata separatamente 
+# a ciascuna finestra temporale e consente di aggregare i dati
+# in base alle specifiche definite nel dizionario `sampling`.
+# Il dizionario `sampling` definisce le colonne su cui applicare 
+# l'aggregazione e la funzione di aggregazione da utilizzare per 
+# ciascuna colonna. Ad esempio, se si vuole calcolare la media 
+# dei valori di accelerazione e di giroscopio per ogni finestra 
+# temporale, il dizionario conterrà la stringa `"mean"`, indicando 
+# di calcolare la media dei valori. La specifica "last"  indica che 
+# verrà selezionato l'ultimo valore presente in ogni finestra temporale
+# --------------------------------------------------------------
 data_merged[:1000].resample(rule="200ms").apply(sampling)
 
-# Split by day
+# I dati vengono suddivisi per giorno utilizzando il metodo groupby 
 days = [g for n, g in data_merged.groupby(pd.Grouper(freq="D"))]
 # Resample data by day
 data_resampled = pd.concat([df.resample(rule="200ms").apply(sampling).dropna() for df in days])
-
 
 data_resampled["set"] = data_resampled["set"].astype("int")
 data_resampled.info()
