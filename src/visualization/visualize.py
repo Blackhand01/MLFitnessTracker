@@ -1,7 +1,13 @@
+# Goal: create data visualizations to better understand the 
+# accelerometer and gyroscope data for the different exercises.
+
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from IPython.display import display
+
+
 # --------------------------------------------------------------
 # Load data
 # --------------------------------------------------------------

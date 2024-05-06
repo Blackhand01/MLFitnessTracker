@@ -1,7 +1,10 @@
-import pandas as pd  # Importa la libreria pandas per la manipolazione dei dati
-import numpy as np  # Importa la libreria numpy per calcoli numerici
-import matplotlib.pyplot as plt  # Importa la libreria matplotlib per la visualizzazione dei dati
-import math  # Importa il modulo math per funzioni matematiche
+# Check whether there are any outliers (extreme values) 
+# in our data that we want to remove using various methods.
+
+import pandas as pd  
+import numpy as np  
+import matplotlib.pyplot as plt  
+import math  
 import scipy  # Importa la libreria scipy per funzioni scientifiche
 from sklearn.neighbors import LocalOutlierFactor  # Importa il modello per il rilevamento degli outlier
 

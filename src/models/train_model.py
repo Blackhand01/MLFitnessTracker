@@ -1,3 +1,6 @@
+# Goal: experiment with feature selection, model selection and hyperparameter tuning with grid search 
+# to find the combination that results in the highest classification accuracy.
+
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -14,23 +17,19 @@ plt.rcParams["figure.figsize"] = (20, 5)
 plt.rcParams["figure.dpi"] = 100
 plt.rcParams["lines.linewidth"] = 2
 
-df = pd.read_pickle("../../data/interim/01_data_processed.pkl")
+df = pd.read_pickle("../../data/interim/03_data_features.pkl")
 
 # --------------------------------------------------------------
 # Create a training and test set
 # --------------------------------------------------------------
 
-# Rimuovi le colonne "participant", "category", "set" dal dataframe df
 df_train = df.drop(["participant", "category", "set"], axis=1)
 
-# X contiene tutte le colonne tranne "label", y contiene solo la colonna "label"
 X = df_train.drop("label", axis=1)
 y = df_train["label"]
 
-# Divisione dei dati in set di training e test
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42, stratify=y)
 
-# Visualizzazione dei grafici
 fig, ax = plt.subplots(figsize=(10, 5))
 df_train["label"].value_counts().plot(kind="bar", ax=ax, color="lightblue", label="Total")
 y_train.value_counts().plot(kind="bar", ax=ax, color="dodgerblue", label="Train")
@@ -50,7 +49,6 @@ time_features = [f for f in df_train.columns if "_temp_" in f]
 freq_features = [f for f in df_train.columns if ("_freq" in f) or ("_pse" in f)]
 cluster_features = ["cluster"]
 
-# Stampa della lunghezza delle diverse liste di feature
 print("Basic features:", len(basic_features))
 print("Square features:", len(square_features))
 print("PCA features:", len(pca_features))
@@ -80,17 +78,18 @@ selected_features, ordered_features, ordered_scores = learner.forward_selection(
 
 # Visualizza le caratteristiche selezionate
 selected_features = [
-    "acc_z_freq_0.0_Hz_ws_14",
-    "acc_x_freq_0.0_Hz_ws_14",
-    "gyr_r_pse",
-    "acc_y_freq_0.0_Hz_ws_14",
-    "gyr_y_freq_0.714_Hz_ws_14",
-    "gyr_r_freq_1.071_Hz_ws_14",
-    "gyr_r_freq_0.357_Hz_ws_14",
-    "gyr_x_freq_1.071_Hz_ws_14",
-    "acc_x_max_freq",
-    "gyr_z_max_freq"
-]
+ 'acc_z_freq_0.0_Hz_ws_14',
+ 'acc_x_freq_0.0_Hz_ws_14',
+ 'duration',
+ 'acc_y_temp_mean_ws_5',
+ 'acc_z_freq_2.143_Hz_ws_14',
+ 'gyr_y_freq_2.143_Hz_ws_14',
+ 'acc_r_temp_std_ws_5',
+ 'gyr_x_pse',
+ 'acc_r_freq_2.5_Hz_ws_14',
+ 'acc_y']
+
+
 
 # Visualizza un grafico dell'accuratezza in funzione del numero di caratteristiche selezionate
 plt.figure(figsize=(10, 5))
@@ -126,8 +125,7 @@ feature_names = [
 iterations = 1
 
 # Creazione di un DataFrame vuoto per memorizzare i punteggi
-score_df = pd.DataFrame()
-
+score_df = pd.DataFrame()    
 
 for i, f in zip(range(len(possible_feature_sets)), feature_names):
     print("Feature set:", i)
@@ -216,13 +214,14 @@ for i, f in zip(range(len(possible_feature_sets)), feature_names):
         }
     )
     score_df = pd.concat([score_df, new_scores])
-    
+
+   
 # --------------------------------------------------------------
 # Create a grouped bar plot to compare the results
 # --------------------------------------------------------------
 
 # Ordina il DataFrame dei punteggi per accuratezza in ordine decrescente
-score_df.sort_values(by="accuracy", ascending=False, inplace=True)
+score_df.sort_values(by="accuracy", ascending=False)
 
 # Visualizza un grafico a barre dell'accuratezza per ogni modello e set di caratteristiche
 plt.figure(figsize=(10, 10))
@@ -233,12 +232,12 @@ plt.ylim(0.7, 1)  # Imposta i limiti dell'asse y
 plt.legend(loc="lower right")
 plt.show()
 
-
 # --------------------------------------------------------------
 # Select best model and evaluate results
 # --------------------------------------------------------------
 
-# Addestramento del modello di classificazione (ad esempio, Random Forest) usando il set di caratteristiche selezionato
+# Addestramento del modello di classificazione (Random Forest) 
+# usando il set di caratteristiche selezionato (feature 4)
 (
     class_train_y,
     class_test_y,
@@ -251,11 +250,10 @@ plt.show()
 # Calcolo dell'accuratezza del modello
 accuracy = accuracy_score(y_test, class_test_y)
 
-# Calcolo della matrice di confusione
+# Creazione e visualizzazione della matrice di confusione
 classes = class_test_prob_y.columns
 cm = confusion_matrix(y_test, class_test_y, labels=classes)
 
-# Creazione e visualizzazione della matrice di confusione
 plt.figure(figsize=(10, 10))
 plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
 plt.title('Confusion matrix')

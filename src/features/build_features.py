@@ -1,3 +1,8 @@
+# Goal: first filter subtle noise (not outliers) and identify parts
+# of the data that explain most of the variance. 
+# Feature Engeneering
+# Then add numerical, temporal, frequency, and cluster features.
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt

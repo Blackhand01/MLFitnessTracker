@@ -1,3 +1,6 @@
+# Goal: read all the separate raw CSV files, process them, 
+# and merge them into a single DataFrame
+
 import pandas as pd
 from glob import glob
 
